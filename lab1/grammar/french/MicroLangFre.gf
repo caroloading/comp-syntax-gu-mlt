@@ -9,13 +9,13 @@ concrete MicroLangFre of MicroLang = open MicroResFre, Prelude in {
     Utt = {s : Str} ;
     
     S  = {s : Str} ;
-    VP = {verb : Verb ; compl : Str} ; ---s special case of Mini
-    Comp = {s : Str} ;
+    VP = {verb : Verb ; compl : Agreement => Str } ; ---s special case of Mini
+    Comp = {s : Agreement => Str} ;
     AP = Adjective ;
     CN = Noun ;
     NP = {s : Case => Str ; a : Agreement} ;
     Pron = {s : Case => Str ; a : Agreement} ;
-    Det = {s : Str ; n : Number} ;
+    Det = {s : Gender => Str ; n : Number} ;
     Prep = {s : Str} ;
     V = Verb ;
     V2 = Verb2 ;
@@ -28,158 +28,166 @@ concrete MicroLangFre of MicroLang = open MicroResFre, Prelude in {
     UttNP np = {s = np.s ! Acc} ;
 
     PredVPS np vp = {
-      s = np.s ! Nom ++ vp.verb.s ! agr2vform np.a ++ vp.compl
-      } ;
+      s = np.s ! Nom ++ vp.verb.s ! agr2vform np.a ++ vp.compl ! np.a
+    } ;
       
     UseV v = {
       verb = v ;
-      compl = [] ;
-      } ;
+      compl = \\agr => []
+    } ;
       
     ComplV2 v2 np = {
       verb = v2 ;
-      compl = v2.c ++ np.s ! Acc  -- NP object in the accusative, preposition first
+      compl = \\ agr => v2.c ++ np.s ! Acc    -- NP object in the accusative, preposition first
       } ;
       
     UseComp comp = {
       verb = be_Verb ;     -- the verb is the copula "be"
-      compl = comp.s
+      compl = comp.s 
       } ;
       
     CompAP ap = ap ;
       
     AdvVP vp adv =
-      vp ** {compl = vp.compl ++ adv.s} ;
+      vp ** { compl = \\agr => (vp.compl ! agr) ++ adv.s
+    } ;
       
-    DetCN det cn = {
-      s = \\c => det.s ++ cn.s ! det.n ;
-      a = Agr det.n ;
-      } ;
+    DetCN d cn = {
+      s = \\c => (d.s ! cn.g) ++ (cn.s ! (NF d.n)) ;
+      a = Agr d.n cn.g ; 
+    } ;
       
     UsePron p = p ;
             
-    a_Det = {s = pre {"a"|"e"|"i"|"o" => "an" ; _ => "a"} ; n = Sg} ; --- a/an can get wrong
-    aPl_Det = {s = "" ; n = Pl} ;
-    the_Det = {s = "the" ; n = Sg} ;
-    thePl_Det = {s = "the" ; n = Pl} ;
+    a_Det = {s = table { Masc => "un"; Fem => "une"} ; n = Sg} ; 
+    aPl_Det = {s = table { Masc => "des"; Fem => "des"} ; n = Pl} ;
+    the_Det = {s = table { Masc => pre {"a"|"e"|"i"|"o"|"h" => "l'" ; _ => "le"}; Fem => pre {"a"|"e"|"i"|"o"|"h" => "l'" ; _ => "la"}} ; n = Sg} ;
+    thePl_Det = {s = table { Masc => "les"; Fem => "les"}; n = Pl} ;
     
     UseN n = n ;
     
-    AdjCN ap cn = {
-      s = table {n => ap.s ! ++ cn.s ! n}
-      } ;
+    AdjCN a cn = {
+            s = \\nf => let agr = Agr (nform2number nf) cn.g
+                        in (cn.s ! nf) ++ (a.s ! agr)  ; 
+            g = cn.g
+        } ;
 
     PositA a = a ;
 
     PrepNP prep np = {s = prep.s ++ np.s ! Acc} ;
 
-    in_Prep = {s = "in"} ;
-    on_Prep = {s = "on"} ;
-    with_Prep = {s = "with"} ;
+    in_Prep = {s = "dans"} ;
+    on_Prep = {s = "sur"} ;
+    with_Prep = {s = "avec"} ;
 
     he_Pron = {
-      s = table {Nom => "he" ; Acc => "him"} ;
-      a = Agr Sg ;
+      s = table {Nom => "il" ; Acc => "le"; Dat => "lui"} ;
+      a = Agr Sg Masc;
       } ;
     she_Pron = {
-      s = table {Nom => "she" ; Acc => "her"} ;
-      a = Agr Sg ;
+      s = table {Nom => "elle" ; Acc => "la"; Dat => "lui"} ;
+      a = Agr Sg Fem;
       } ;
     they_Pron = {
-      s = table {Nom => "they" ; Acc => "them"} ;
-      a = Agr Pl ;
+      s = table {Nom => "ils" ; Acc => "les"; Dat => "leur"} ;
+      a = Agr Pl Masc ;
       } ;
+    {- theyF_Pron = {
+      s = table {Nom => "elles" ; Acc => "les"; Dat => "leur"} ;
+      a = Agr Pl Fem ;
+    }; -}
+    
 
 -----------------------------------------------------
 ---------------- Lexicon part -----------------------
 -----------------------------------------------------
 
 lin already_Adv = mkAdv "déjà" ;
-lin animal_N = mkN "animal" ;
-lin apple_N = mkN "pomme" ;
-lin baby_N = mkN "bébé" ;
+lin animal_N = mkN "animal" Masc ;
+lin apple_N = mkN "pomme" Fem ;
+lin baby_N = mkN "bébé" Masc ;
 lin bad_A = mkA "mauvais" ;
-lin beer_N = mkN "bière" ;
+lin beer_N = mkN "bière" Fem ;
 lin big_A = mkA "grand" ;
-lin bike_N = mkN "vélo" ;
-lin bird_N = mkN "oiseau" ;
+lin bike_N = mkN "vélo" Masc ;
+lin bird_N = mkN "oiseau" Masc ;
 lin black_A = mkA "noir" ;
-lin blood_N = mkN "sang" ;
+lin blood_N = mkN "sang" Masc ;
 lin blue_A = mkA "bleu" ;
-lin boat_N = mkN "bateau" ;
-lin book_N = mkN "livre" ;
-lin boy_N = mkN "garçon" ;
-lin bread_N = mkN "pain" ;
-lin break_V2 = mkV2 (mkV "casser" "broke" "broken") ;
-lin buy_V2 = mkV2 (mkV "acheter" "bought" "bought") ;
-lin car_N = mkN "voiture" ;
-lin cat_N = mkN "chat" ;
-lin child_N = mkN "enfant" ;
-lin city_N = mkN "ville" ;
+lin boat_N = mkN "bateau" Masc ;
+lin book_N = mkN "livre" Masc ;
+lin boy_N = mkN "garçon" Masc ;
+lin bread_N = mkN "pain" Masc ;
+lin break_V2 = mkV2 "casser" ; --DONE
+lin buy_V2 = mkV2 "acheter" ; --DONE
+lin car_N = mkN "voiture" Fem ;
+lin cat_N = mkN "chat" Masc ;
+lin child_N = mkN "enfant" Masc ;
+lin city_N = mkN "ville" Fem ;
 lin clean_A = mkA "propre" ;
 lin clever_A = mkA "malin" ;
-lin cloud_N = mkN "nuage" ;
+lin cloud_N = mkN "nuage" Masc ;
 lin cold_A = mkA "froid" ;
-lin come_V = mkV "venir" ;
-lin computer_N = mkN "ordinateur" ;
-lin cow_N = mkN "vache" ;
+lin come_V = mkV "venir" "vient" "viennent" "venait" "venu" ; --CHECK
+lin computer_N = mkN "ordinateur" Masc ;
+lin cow_N = mkN "vache" Fem ;
 lin dirty_A = mkA "sale" ;
-lin dog_N = mkN "chien" ;
-lin drink_V2 = mkV2 (mkV "boire" "drank" "drunk") ;
-lin eat_V2 = mkV2 (mkV "manger" "ate" "eaten") ;
-lin find_V2 = mkV2 (mkV "trouver" "found" "found") ;
-lin fire_N = mkN "feu" ;
-lin fish_N = mkN "poisson" ;
-lin flower_N = mkN "fleur" ;
-lin friend_N = mkN "ami" ;
-lin girl_N = mkN "fille" ;
+lin dog_N = mkN "chien" Masc ;
+lin drink_V2 = mkV2 (mkV "boire" "boit" "boivent" "buvait" "bu" ) ; -- CHECK
+lin eat_V2 = mkV2 "manger" ; --CHECK
+lin find_V2 = mkV2 "trouver"; -- DONE
+lin fire_N = mkN "feu" Masc ;
+lin fish_N = mkN "poisson" Masc ;
+lin flower_N = mkN "fleur" Fem ;
+lin friend_N = mkN "ami" Masc ;
+lin girl_N = mkN "fille" Fem ;
 lin good_A = mkA "bon" ;
-lin go_V = mkV "aller";
-lin grammar_N = mkN "grammaire" ;
+lin go_V = mkV "aller" "va" "vont" "allait" "allé"; -- CHECK
+lin grammar_N = mkN "grammaire" Fem ;
 lin green_A = mkA "vert" ;
 lin heavy_A = mkA "lourd" ;
-lin horse_N = mkN "cheval" ;
+lin horse_N = mkN "cheval" Masc ;
 lin hot_A = mkA "chaud" ;
-lin house_N = mkN "maison" ;
+lin house_N = mkN "maison" Fem ;
 -- lin john_PN = mkPN "John" ;
 lin jump_V = mkV "sauter" ;
 lin kill_V2 = mkV2 "tuer" ;
 -- lin know_VS = mkVS (mkV "savoir" "knew" "known") ;
-lin language_N = mkN "langue" ;
-lin live_V = mkV "vivre" ;
-lin love_V2 = mkV2 (mkV "aimer") ;
-lin man_N = mkN "homme" ;
-lin milk_N = mkN "lait" ;
-lin music_N = mkN "musique" ;
+lin language_N = mkN "langue" Fem ;
+lin live_V = mkV "vivre" "vit" "vivent" "vivait" "vécu";
+lin love_V2 = mkV2 "aimer" ;
+lin man_N = mkN "homme" Masc ;
+lin milk_N = mkN "lait" Masc ;
+lin music_N = mkN "musique" Fem ;
 lin new_A = mkA "nouveau" ;
 lin now_Adv = mkAdv "maintenant" ;
 lin old_A = mkA "vieux" ;
 -- lin paris_PN = mkPN "Paris" ;
 lin play_V = mkV "jouer" ;
-lin read_V2 = mkV2 (mkV "lire" "read" "read") ;
+lin read_V2 = mkV2 (mkV "lire" "lit" "lisent" "lisait" "lu") ;
 lin ready_A = mkA "prêt" ;
 lin red_A = mkA "rouge" ;
-lin river_N = mkN "rivière" ;
-lin run_V = mkV "courir" "ran" "run" ;
-lin sea_N = mkN "mer" ;
-lin see_V2 = mkV2 (mkV "voir" "saw" "seen") ;
-lin ship_N = mkN "navire" ;
-lin sleep_V = mkV "dormir" "slept" "slept" ;
+lin river_N = mkN "rivière" Fem ;
+lin run_V = mkV "courir" "court" "courent" "courait" "courru" ;
+lin sea_N = mkN "mer" Fem ;
+lin see_V2 = mkV2 (mkV "voir" "voit" "voient" "voyait" "vu" ) ;
+lin ship_N = mkN "navire" Masc ;
+lin sleep_V = mkV "dormir" "dort" "dorment" "dormait" "dormi" ;
 lin small_A = mkA "petit" ;
-lin star_N = mkN "étoile" ;
-lin swim_V = mkV "nager" "swam" "swum" ;
-lin teach_V2 = mkV2 (mkV "enseigner" "taught" "taught") ;
-lin train_N = mkN "train" ;
+lin star_N = mkN "étoile" Fem ;
+lin swim_V = mkV "nager" ;
+lin teach_V2 = mkV2 "enseigner" ;
+lin train_N = mkN "train" Masc ;
 lin travel_V = mkV "voyager" ;
-lin tree_N = mkN "arbre" ;
-lin understand_V2 = mkV2 (mkV "comprendre" "understood" "understood") ;
+lin tree_N = mkN "arbre" Masc ;
+lin understand_V2 = mkV2 (mkV "comprendre" "comprend" "comprennent" "comprenait" "compris") ;
 lin wait_V2 = mkV2 "attendre" ;
 lin walk_V = mkV "marcher" ;
 lin warm_A = mkA "chaud" ; -- other translation? because same as hot
-lin water_N = mkN "eau" ;
+lin water_N = mkN "eau" Fem ;
 lin white_A = mkA "blanc" ;
-lin wine_N = mkN "vin" ;
-lin woman_N = mkN "femme";
+lin wine_N = mkN "vin" Masc ;
+lin woman_N = mkN "femme" Fem ;
 lin yellow_A = mkA "jaune" ;
 lin young_A = mkA "jeune" ;
 
@@ -189,31 +197,27 @@ lin young_A = mkA "jeune" ;
 
 oper
   mkN = overload {
-    mkN : Str -> Noun   -- predictable noun, e.g. car-cars, boy-boys, fly-flies, bush-bushes
-      = \n -> lin N (smartNoun n) ;
-    mkN : Str -> Str -> Noun  -- irregular noun, e.g. man-men
-      = \sg,pl -> lin N (mkNoun sg pl) ;
+    mkN : Str -> Gender -> Noun   -- predictable noun, e.g. car-cars, boy-boys, fly-flies, bush-bushes
+      = \n, g -> lin N (smartNoun n g) ;
+    mkN : Str -> Str -> Gender -> Noun  -- irregular noun, e.g. man-men
+      = \sg,pl, g -> lin N (mkNoun sg pl g) ;
     } ;
 
-  mkA : Str -> A
-    = \s -> lin A {s = s} ;
+  mkA : Str -> Adjective   -- predictable noun, e.g. car-cars, boy-boys, fly-flies, bush-bushes
+      = \n -> lin A (smartAdj n) ;
 
   mkV = overload {
     mkV : (inf : Str) -> V  -- predictable verb, e.g. play-plays, cry-cries, wash-washes
       = \s -> lin V (smartVerb s) ;
-    mkV : (inf,pres,part : Str) -> V  -- irregular verb, e.g. drink-drank-drunk
-      = \inf,pres,part -> lin V (irregVerb inf pres part) ;
+    mkV : (inf,presSg3, presPl3,past,part : Str) -> V  -- irregular verb, e.g. drink-drank-drunk
+      = \inf,presSg3,presPl3,past,part -> lin V (irregVerb inf presSg3 presPl3 past part) ;
     } ;
 
   mkV2 = overload {
     mkV2 : Str -> V2          -- predictable verb with direct object, e.g. "wash"
       = \s   -> lin V2 (smartVerb s ** {c = []}) ;
-    mkV2 : Str  -> Str -> V2  -- predictable verb with preposition, e.g. "wait - for"
-      = \s,p -> lin V2 (smartVerb s ** {c = p}) ;
     mkV2 : V -> V2            -- any verb with direct object, e.g. "drink"
       = \v   -> lin V2 (v ** {c = []}) ;
-    mkV2 : V -> Str -> V2     -- any verb with preposition
-      = \v,p -> lin V2 (v ** {c = p}) ;
     } ;
 
   mkAdv : Str -> Adv
