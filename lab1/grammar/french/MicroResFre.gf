@@ -4,14 +4,21 @@ param
   Number = Sg | Pl ;
   Case = Nom | Acc | Dat;
   Gender = Masc | Fem;
+  --Pos = Bef | Aft;
 
   Agreement = Agr Number Gender ;
   NForm = NF Number;
+ -- ComplPos = CP Pos;
 
   -- all forms of normal Eng verbs, although not yet used in MiniGrammar
   VForm = Inf | PresSg3 | PresPl3 | PastSg3 | PastPl3 | PastPart | PresPart ; 
 
 oper
+
+ {-  pos2compl : Str -> ComplPos -> Verb2 -> Str = \np, pos, v2 -> case pos of {
+        (CP Bef) => (np + "here") ++ v2.c;
+        (CP Aft) => v2.c ++ np
+  };    -} 
 
   Noun = {s : NForm => Str; g: Gender } ;
 
@@ -56,15 +63,16 @@ oper
               }
   } ;
 
-  regAdj : Str -> Adjective = \sg -> mkAdj sg (sg + "s") (sg + "e") (sg + "es");
+  regAdj : Str -> Str -> Adjective = \sgmasc, sgfem -> mkAdj sgmasc (sgmasc + "s") (sgfem + "e") (sgfem + "es");
 
   smartAdj : Str -> Adjective = \sgmasc -> case sgmasc of {
-    _ + ("s" | "x" | "z") => mkAdj sgmasc sgmasc (sgmasc + "e") (sgmasc + "es");
     vi + "eux" => mkAdj sgmasc sgmasc (vi + "eille") (vi + "eilles");
     propr + "e" => mkAdj sgmasc (sgmasc + "s") sgmasc (sgmasc + "s");
-    fran + "c" => mkAdj sgmasc (sgmasc + "s") (fran + "che")  (fran + "ches");
     b + "eau" => mkAdj sgmasc (sgmasc + "x") (b + "elle") (b + "elles");
-    _         => regAdj sgmasc
+    
+    b + "on" => regAdj sgmasc (sgmasc + "n");
+    fran + "c" => regAdj sgmasc (fran + "ch") ;
+    _         => regAdj sgmasc sgmasc
 
     {- irrelevant for current vocabulary
     ai + "gu" => mkAdj sgmasc (sgmasc + "s") (ai + "güe") (ai + "gües" );
@@ -103,6 +111,7 @@ oper
     fin + "ir" => mkVerb inf (fin + "it") (fin + "issent") (fin + "issait") (fin + "issaient") (fin + "i") (fin + "issant") ;
     mord + "re" => mkVerb inf mord (mord + "ent") (mord + "ait") (mord + "aient") (mord + "u") (mord + "ant");
     man + "ger" => mkVerb inf (man + "ge") (man + "gent") (man + "geait") (man + "geaient") (man + "gé") (man + "geant");
+    ach + "eter" => mkVerb inf (ach + "ète") (ach + "ètent") (ach + "etait") (ach + "etaient") (ach + "eté") (ach + "etant");
     _ => regVerb inf
   } ;
 

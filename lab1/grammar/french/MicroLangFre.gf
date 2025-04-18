@@ -9,17 +9,17 @@ concrete MicroLangFre of MicroLang = open MicroResFre, Prelude in {
     Utt = {s : Str} ;
     
     S  = {s : Str} ;
-    VP = {verb : Verb ; compl : Agreement => Str } ; ---s special case of Mini
+    VP = {verb : Verb ; compl : Agreement => Str; isPron: Bool} ; ---s special case of Mini
     Comp = {s : Agreement => Str} ;
     AP = Adjective ;
     CN = Noun ;
-    NP = {s : Case => Str ; a : Agreement} ;
-    Pron = {s : Case => Str ; a : Agreement} ;
+    NP = {s : Case => Str ; a : Agreement; isPron : Bool} ;
+    Pron = {s : Case => Str ; a : Agreement} ;    
     Det = {s : Gender => Str ; n : Number} ;
     Prep = {s : Str} ;
     V = Verb ;
     V2 = Verb2 ;
-    A = Adjective ;
+    A = Adjective ; -- réparer l'ordre
     N = Noun ;
     Adv = {s : Str} ;
 
@@ -27,24 +27,27 @@ concrete MicroLangFre of MicroLang = open MicroResFre, Prelude in {
     UttS s = s ;
     UttNP np = {s = np.s ! Acc} ;
 
-    PredVPS np vp = {
-      s = np.s ! Nom ++ vp.verb.s ! agr2vform np.a ++ vp.compl ! np.a
+    PredVPS np vp = { -- FIX TO SEPARATE PRON FROM COMPL
+      s = np.s ! Nom ++ (preOrPost vp.isPron (vp.compl ! np.a) (vp.verb.s ! agr2vform np.a)) 
     } ;
       
     UseV v = {
       verb = v ;
-      compl = \\agr => []
+      compl = \\agr => [];
+      isPron = False
     } ;
       
     ComplV2 v2 np = {
       verb = v2 ;
-      compl = \\ agr => v2.c ++ np.s ! Acc    -- NP object in the accusative, preposition first
-      } ;
+      compl = \\agr => v2.c ++ np.s ! Acc;
+      isPron = np.isPron
+    };
       
     UseComp comp = {
       verb = be_Verb ;     -- the verb is the copula "be"
-      compl = comp.s 
-      } ;
+      compl = comp.s ;
+      isPron = False
+    } ;
       
     CompAP ap = ap ;
       
@@ -54,10 +57,11 @@ concrete MicroLangFre of MicroLang = open MicroResFre, Prelude in {
       
     DetCN d cn = {
       s = \\c => (d.s ! cn.g) ++ (cn.s ! (NF d.n)) ;
-      a = Agr d.n cn.g ; 
+      a = Agr d.n cn.g ;
+      isPron = False
     } ;
       
-    UsePron p = p ;
+    UsePron p = p ** {isPron = True};
             
     a_Det = {s = table { Masc => "un"; Fem => "une"} ; n = Sg} ; 
     aPl_Det = {s = table { Masc => "des"; Fem => "des"} ; n = Pl} ;
@@ -74,22 +78,22 @@ concrete MicroLangFre of MicroLang = open MicroResFre, Prelude in {
 
     PositA a = a ;
 
-    PrepNP prep np = {s = prep.s ++ np.s ! Acc} ;
+    PrepNP prep np = {s = prep.s ++ np.s ! Dat} ;
 
     in_Prep = {s = "dans"} ;
     on_Prep = {s = "sur"} ;
     with_Prep = {s = "avec"} ;
 
     he_Pron = {
-      s = table {Nom => "il" ; Acc => "le"; Dat => "lui"} ;
+      s = table {Nom => "il" ; Acc => pre {"a"|"e"|"i"|"o"|"h" => "l'" ; _ => "le"}; Dat => "lui"} ;
       a = Agr Sg Masc;
       } ;
     she_Pron = {
-      s = table {Nom => "elle" ; Acc => "la"; Dat => "lui"} ;
+      s = table {Nom => "elle" ; Acc => pre {"a"|"e"|"i"|"o"|"h" => "l'" ; _ => "la"}; Dat => "elle"} ;
       a = Agr Sg Fem;
       } ;
     they_Pron = {
-      s = table {Nom => "ils" ; Acc => "les"; Dat => "leur"} ;
+      s = table {Nom => "ils" ; Acc => "les"; Dat => "eux"} ;
       a = Agr Pl Masc ;
       } ;
     {- theyF_Pron = {
@@ -125,7 +129,7 @@ lin cat_N = mkN "chat" Masc ;
 lin child_N = mkN "enfant" Masc ;
 lin city_N = mkN "ville" Fem ;
 lin clean_A = mkA "propre" ;
-lin clever_A = mkA "malin" ;
+lin clever_A = mkA "sage" ;
 lin cloud_N = mkN "nuage" Masc ;
 lin cold_A = mkA "froid" ;
 lin come_V = mkV "venir" "vient" "viennent" "venait" "venu" ; --CHECK
