@@ -4,21 +4,14 @@ param
   Number = Sg | Pl ;
   Case = Nom | Acc | Dat;
   Gender = Masc | Fem;
-  --Pos = Bef | Aft;
 
   Agreement = Agr Number Gender ;
   NForm = NF Number;
- -- ComplPos = CP Pos;
 
   -- all forms of normal Eng verbs, although not yet used in MiniGrammar
   VForm = Inf | PresSg3 | PresPl3 | PastSg3 | PastPl3 | PastPart | PresPart ; 
 
 oper
-
- {-  pos2compl : Str -> ComplPos -> Verb2 -> Str = \np, pos, v2 -> case pos of {
-        (CP Bef) => (np + "here") ++ v2.c;
-        (CP Aft) => v2.c ++ np
-  };    -} 
 
   Noun = {s : NForm => Str; g: Gender } ;
 
@@ -53,26 +46,27 @@ oper
     _ + "ail" => regNoun sg g; -}
     };
 
-  Adjective = {s : Agreement => Str} ;
+  Adjective = {s : Agreement => Str; isBef: Bool} ; --isBef indicates if the adjective is before the noun (True) or after (False)
 
-  mkAdj : Str -> Str -> Str -> Str -> Adjective = \sgmasc, plmasc, sgfem, plfem -> {
+  mkAdj : Str -> Str -> Str -> Str -> Bool -> Adjective = \sgmasc, plmasc, sgfem, plfem, pos -> {
     s = table { Agr Sg Masc => sgmasc; 
                 Agr Pl Masc => plmasc;
                 Agr Sg Fem => sgfem;
                 Agr Pl Fem => plfem
-              }
+              };
+    isBef = pos
   } ;
 
-  regAdj : Str -> Str -> Adjective = \sgmasc, sgfem -> mkAdj sgmasc (sgmasc + "s") (sgfem + "e") (sgfem + "es");
+  regAdj : Str -> Str -> Bool -> Adjective = \sgmasc, sgfem, pos -> mkAdj sgmasc (sgmasc + "s") sgfem (sgfem + "s") pos ;
 
-  smartAdj : Str -> Adjective = \sgmasc -> case sgmasc of {
-    vi + "eux" => mkAdj sgmasc sgmasc (vi + "eille") (vi + "eilles");
-    propr + "e" => mkAdj sgmasc (sgmasc + "s") sgmasc (sgmasc + "s");
-    b + "eau" => mkAdj sgmasc (sgmasc + "x") (b + "elle") (b + "elles");
+  smartAdj : Str -> Bool -> Adjective = \sgmasc, pos -> case sgmasc of {
+    vi + "eux" => mkAdj (pre {"a"|"e"|"i"|"o"|"h"|"é" => vi + "eil" ; _ => sgmasc}) sgmasc (vi + "eille") (vi + "eilles") pos;
+    propr + "e" => mkAdj sgmasc (sgmasc + "s") sgmasc (sgmasc + "s") pos;
+    b + "eau" => mkAdj (pre {"a"|"e"|"i"|"o"|"h"|"é" => b + "el" ; _ => sgmasc}) (sgmasc + "x") (b + "elle") (b + "elles") pos;
     
-    b + "on" => regAdj sgmasc (sgmasc + "n");
-    fran + "c" => regAdj sgmasc (fran + "ch") ;
-    _         => regAdj sgmasc sgmasc
+    b + "on" => regAdj sgmasc (sgmasc + "ne") pos;
+    fran + "c" => regAdj sgmasc (fran + "che") pos;
+    _         => regAdj sgmasc (sgmasc + "e") pos
 
     {- irrelevant for current vocabulary
     ai + "gu" => mkAdj sgmasc (sgmasc + "s") (ai + "güe") (ai + "gües" );
@@ -88,8 +82,8 @@ oper
 
   Verb : Type = {s : VForm => Str} ;
 
-  mkVerb : (inf,presSg,presPl,pastSg, pastPl,pastpart,prespart : Str) -> Verb
-    = \inf,presSg,presPl,pastSg, pastPl,pastpart,prespart -> {
+  mkVerb : (inf,presSg,presPl,pastSg,pastPl,pastpart,prespart : Str) -> Verb
+    = \inf,presSg,presPl,pastSg,pastPl,pastpart,prespart -> {
     s = table {
       Inf => inf ;
       PresSg3 => presSg ;
