@@ -8,7 +8,6 @@ param
   Agreement = Agr Number Gender ;
   NForm = NF Number;
 
-  -- all forms of normal Eng verbs, although not yet used in MiniGrammar
   VForm = Inf | PresSg3 | PresPl3 | PastSg3 | PastPl3 | PastPart | PresPart ; 
 
 oper

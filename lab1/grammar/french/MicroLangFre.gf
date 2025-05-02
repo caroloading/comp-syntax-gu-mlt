@@ -125,8 +125,8 @@ lin boat_N = mkN "bateau" Masc ;
 lin book_N = mkN "livre" Masc ;
 lin boy_N = mkN "garçon" Masc ;
 lin bread_N = mkN "pain" Masc ;
-lin break_V2 = mkV2 "casser" ; --DONE
-lin buy_V2 = mkV2 "acheter" ; --DONE
+lin break_V2 = mkV2 "casser" ;
+lin buy_V2 = mkV2 "acheter" ; 
 lin car_N = mkN "voiture" Fem ;
 lin cat_N = mkN "chat" Masc ;
 lin child_N = mkN "enfant" Masc ;
@@ -135,21 +135,21 @@ lin clean_A = mkA "propre" False ;
 lin clever_A = mkA "sage" False ;
 lin cloud_N = mkN "nuage" Masc ;
 lin cold_A = mkA "froid" False ;
-lin come_V = mkV "venir" "vient" "viennent" "venait" "venu" ; --CHECK
+lin come_V = mkV "venir" "vient" "viennent" "venait" "venu" ;
 lin computer_N = mkN "ordinateur" Masc ;
 lin cow_N = mkN "vache" Fem ;
 lin dirty_A = mkA "sale" False ;
 lin dog_N = mkN "chien" Masc ;
-lin drink_V2 = mkV2 (mkV "boire" "boit" "boivent" "buvait" "bu" ) ; -- CHECK
-lin eat_V2 = mkV2 "manger" ; --CHECK
-lin find_V2 = mkV2 "trouver"; -- DONE
+lin drink_V2 = mkV2 (mkV "boire" "boit" "boivent" "buvait" "bu" ) ; 
+lin eat_V2 = mkV2 "manger" ; 
+lin find_V2 = mkV2 "trouver"; 
 lin fire_N = mkN "feu" Masc ;
 lin fish_N = mkN "poisson" Masc ;
 lin flower_N = mkN "fleur" Fem ;
 lin friend_N = mkN "ami" Masc ;
 lin girl_N = mkN "fille" Fem ;
 lin good_A = mkA "bon" True ;
-lin go_V = mkV "aller" "va" "vont" "allait" "allé"; -- CHECK
+lin go_V = mkV "aller" "va" "vont" "allait" "allé"; 
 lin grammar_N = mkN "grammaire" Fem ;
 lin green_A = mkA "vert" False ;
 lin heavy_A = mkA "lourd" False ;
@@ -159,7 +159,7 @@ lin house_N = mkN "maison" Fem ;
 -- lin john_PN = mkPN "John" ;
 lin jump_V = mkV "sauter" ;
 lin kill_V2 = mkV2 "tuer" ;
--- lin know_VS = mkVS (mkV "savoir" "knew" "known") ;
+-- lin know_VS = mkVS (mkV "savoir" "sait" "savent" "savait" "su") ;
 lin language_N = mkN "langue" Fem ;
 lin live_V = mkV "vivre" "vit" "vivent" "vivait" "vécu";
 lin love_V2 = mkV2 "aimer" ;
@@ -190,7 +190,7 @@ lin tree_N = mkN "arbre" Masc ;
 lin understand_V2 = mkV2 (mkV "comprendre" "comprend" "comprennent" "comprenait" "compris") ;
 lin wait_V2 = mkV2 "attendre" ;
 lin walk_V = mkV "marcher" ;
-lin warm_A = mkA "chaud" False ; -- other translation? because same as hot
+lin warm_A = mkA "chaud" False ;
 lin water_N = mkN "eau" Fem ;
 lin white_A = mkA "blanc" False ;
 lin wine_N = mkN "vin" Masc ;
@@ -203,27 +203,23 @@ lin young_A = mkA "jeune" True ;
 ---------------------------
 
 oper
-  mkN = overload {
-    mkN : Str -> Gender -> Noun   -- predictable noun, e.g. car-cars, boy-boys, fly-flies, bush-bushes
+  mkN : Str -> Gender -> Noun   
       = \n, g -> lin N (smartNoun n g) ;
-    mkN : Str -> Str -> Gender -> Noun  -- irregular noun, e.g. man-men
-      = \sg,pl, g -> lin N (mkNoun sg pl g) ;
-    } ;
 
-  mkA : Str -> Bool -> Adjective   -- predictable noun, e.g. car-cars, boy-boys, fly-flies, bush-bushes
+  mkA : Str -> Bool -> Adjective  
       = \n, pos -> lin A (smartAdj n pos) ;
 
   mkV = overload {
-    mkV : (inf : Str) -> V  -- predictable verb, e.g. play-plays, cry-cries, wash-washes
+    mkV : (inf : Str) -> V  -- predictable verb, e.g. "manger"
       = \s -> lin V (smartVerb s) ;
-    mkV : (inf,presSg3, presPl3,past,part : Str) -> V  -- irregular verb, e.g. drink-drank-drunk
+    mkV : (inf,presSg3, presPl3,past,part : Str) -> V  -- irregular verb, e.g. "venir", vie"nt, "viennent", "venait", "venu"
       = \inf,presSg3,presPl3,past,part -> lin V (irregVerb inf presSg3 presPl3 past part) ;
     } ;
 
   mkV2 = overload {
-    mkV2 : Str -> V2          -- predictable verb with direct object, e.g. "wash"
+    mkV2 : Str -> V2          -- predictable verb with direct object, e.g. "trouver"
       = \s   -> lin V2 (smartVerb s ** {c = []}) ;
-    mkV2 : V -> V2            -- any verb with direct object, e.g. "drink"
+    mkV2 : V -> V2           
       = \v   -> lin V2 (v ** {c = []}) ;
     } ;
 
